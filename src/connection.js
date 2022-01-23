@@ -353,10 +353,18 @@ function Connection() {
 				var time = formatDate(data.data.start_time * 1000);
 				var origin_id = data.data.id;
 				var duration = data.data.time;
-				var anchor_room_id = data.data.medal_info.anchor_roomid;
-				var anchor_name = data.data.medal_info.anchor_uname;
-				var medal_name = data.data.medal_info.medal_name;
-				var medal_level = data.data.medal_info.medal_level;
+				// 无粉丝勋章
+				var anchor_room_id = 0;
+				var anchor_name = "无勋章或主播无效";
+				var medal_name = "NO MEDAL OR INVALID ANCHOR";
+				var medal_level = 0;
+				if (data.data.medal_info) {
+					// 有粉丝勋章
+					anchor_room_id = data.data.medal_info.anchor_roomid;
+					anchor_name = data.data.medal_info.anchor_uname;
+					medal_name = data.data.medal_info.medal_name;
+					medal_level = data.data.medal_info.medal_level;
+				}
 				var text = data.data.message;
 				var is_admin = data.data.user_info.manager;
 				var is_main_vip = data.data.user_info.is_main_vip;
