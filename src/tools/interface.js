@@ -5,10 +5,10 @@
 
 var config;
 // 检查config.js是否有误
-try{
+try {
 	config = require('../../config');
 }
-catch(e){
+catch (e) {
 	// config.js有语法错误
 	console.log("无法读取config.js！请检查括号是否成对，以及是否使用半角符号。");
 	console.log(e);
@@ -30,107 +30,107 @@ const rl = readline.createInterface({
 	output: process.stdout
 });
 
-async function main(){
+async function main() {
 	// 访问数据库
 	log.v1(`正在获取数据库列表`);
 	var existing_dbs = [];
 	var json = [];
-	try{
+	try {
 		database.createPool();
 		conn = await database.createConn();
 		var rows = await database.query(conn, "SHOW DATABASES;");
-		rows.forEach(function(element){
+		rows.forEach(function (element) {
 			existing_dbs.push(element.Database);
 		});
 	}
-	catch(e){
+	catch (e) {
 		log.v2(`数据库连接失败：${e}`);
 		log.v2("请检查config.js关于数据库的配置。");
 		process.exit(0);
 	}
 	log.v1(`正在读取历史记录文件`);
 	var exists = await new Promise((resolve, reject) => {
-		fs.exists("../../histroy/database_histroy.json", function(exists){
+		fs.exists("../../histroy/database_histroy.json", function (exists) {
 			resolve(exists);
 		});
 	});
-	if(exists){
-		try{
+	if (exists) {
+		try {
 			json = JSON.parse(fs.readFileSync("../../histroy/database_histroy.json", "utf8"));
 		}
-		catch(e){
+		catch (e) {
 			log.v2(`无法读取历史记录文件：${e}`);
 		}
 	}
-	label:for(var i = 0; i < existing_dbs.length; i ++){
+	label: for (var i = 0; i < existing_dbs.length; i++) {
 		var db = existing_dbs[i];
 		// 跳过一些数据库
-		if(db == "information_schema" || db == "performance_schema" || db == "sys" || db == "mysql"){
+		if (db == "information_schema" || db == "performance_schema" || db == "sys" || db == "mysql") {
 			continue label;
 		}
-		if(json.length != 0){
+		if (json.length != 0) {
 			// 只读取历史记录里有的数据库
-			for(var j = 0; j < json.length; j ++){
-				if(json[j].database_name == db){
+			for (var j = 0; j < json.length; j++) {
+				if (json[j].database_name == db) {
 					databases.push({
-						database_name : db,
-						display : `${db} - ${json[j].anchor_name}`
+						database_name: db,
+						display: `${db} - ${json[j].anchor_name}`
 					});
 					continue label;
 				}
 			}
 		}
-		else{
+		else {
 			databases.push({
-				database_name : db,
-				display : db
+				database_name: db,
+				display: db
 			});
 		}
 	}
 	console.log("%%% 服务器的数据库列表 %%%");
 	console.log("* 如未找到，尝试删除histroy/database_histroy.json文件");
-	for(var i = 0; i < databases.length; i ++){
+	for (var i = 0; i < databases.length; i++) {
 		console.log(`#${(i + 1)}	${databases[i].display}`);
 	}
 	var choice;
-	while(true){
+	while (true) {
 		var answer = await question("请输入序号并回车，例如3\n");
-		if(/^[0-9]+/.test(answer)){
+		if (/^[0-9]+/.test(answer)) {
 			var number = parseInt(answer);
-			if(number <= 0 || number > databases.length){
+			if (number <= 0 || number > databases.length) {
 				console.log("序号不存在！");
 			}
-			else{
+			else {
 				choice = number - 1;
 				break;
 			}
 		}
-		else{
+		else {
 			console.log("无法识别你输入的序号！");
 		}
 	}
 	console.log("%%% 统计工具 %%%\n"
-	+ "#1	弹幕合并"
+		+ "#1	弹幕合并"
 	);
 	var tool;
-	while(true){
+	while (true) {
 		var answer = await question("请输入序号并回车，例如3\n");
-		if(/^[0-9]+/.test(answer)){
+		if (/^[0-9]+/.test(answer)) {
 			var number = parseInt(answer);
-			if(number <= 0 || number > 1){
+			if (number <= 0 || number > 1) {
 				console.log("序号不存在！");
 			}
-			else{
+			else {
 				tool = number;
 				break;
 			}
 		}
-		else{
+		else {
 			console.log("无法识别你输入的序号！");
 		}
 	}
-	if(tool == 1){
-		try{
+	if (tool == 1) {
+		try {
 			await database.query(conn, `USE ${databases[choice].database_name};`);
 			log.v1("正在创建或确认数据表danmaku_combined");
 			await database.query(conn, `CREATE TABLE IF NOT EXISTS danmaku_combined LIKE danmaku;`);
@@ -148,17 +148,17 @@ async function main(){
 			// 创建临时表
 			await database.query(conn, `CREATE TEMPORARY TABLE danmaku_tmp(id INT(11) PRIMARY KEY, text TEXT);`);
 			var chunk = 1000;// 单次更新的数据量
-			while(out_data.length != 0){
+			while (out_data.length != 0) {
 				var danmakus = out_data.splice(0, chunk);
 				await database.query(conn, `INSERT INTO danmaku_tmp (id, text) VALUES ? ;`, [danmakus]);
 			}
 			await database.query(conn, `UPDATE danmaku_combined, danmaku_tmp SET danmaku_combined.text=danmaku_tmp.text WHERE danmaku_combined.id=danmaku_tmp.id`);
 			log.v1("合并完成");
 		}
-		catch(e){
+		catch (e) {
 			console.log(e);
 		}
-		finally{
+		finally {
 			conn.release();
 			process.exit(0);
 		}
@@ -168,7 +168,7 @@ async function main(){
 // 入口
 main();
 
-function question(text){
+function question(text) {
 	return new Promise((resolve, reject) => {
 		rl.question(text, (answer) => {
 			resolve(answer);
