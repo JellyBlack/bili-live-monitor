@@ -309,7 +309,7 @@ function update(doDispose/* 是否重新创建ECharts */) {
 		}
 		final_data = export_data;
 		var series = [];
-		var string = "{";
+		var selected = {};
 		danmaku_legend = ["time"];
 		for (var j = 0; j < data.rank.length; j++) {
 			series.push({
@@ -319,27 +319,25 @@ function update(doDispose/* 是否重新创建ECharts */) {
 				symbol: "none"
 			});
 			danmaku_legend.push(data.rank[j].text);
-			var text = data.rank[j].text.replace(/'/g, "\\'");
+			var text = data.rank[j].text;
 			if (j != data.rank.length - 1) {
 				if (j < 9) {
-					string += `'${text}':true,`;
+					selected[text] = true;
 				}
 				else {
-					string += `'${text}':false,`;
+					selected[text] = false;
 				}
 			}
 			else {
 				if (j < 9) {
-					string += `'${text}':true`;
+					selected[text] = true;
 				}
 				else {
-					string += `'${text}':false`;
+					selected[text] = false;
 				}
 			}
 		}
-		string += "}";
-		var selected = eval("(" + string + ")");
-		name = "弹幕数量折线图（排行）"
+		var name = "弹幕数量折线图（排行）"
 		option = {
 			title: {
 				left: 'center',
@@ -668,7 +666,7 @@ function exportOnClick() {
 									for (var j = 0; j < records.length; j++) {
 										if (records[j].text == data[i].text) {
 											records[j].num++;
-											break label;
+											continue label;
 										}
 									}
 									records.push({
